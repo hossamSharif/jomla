@@ -5,6 +5,16 @@
 **Status**: Draft
 **Input**: User description: "i would like to build a online store mobile app(android , iOS) for sell groceries with the web app as dashboard to manage mobile app. The app will sell groceries by collect many products and create an offer for it, so adding new offer will done by collect many products together and set their prices one by one by decreasing the prices, so the offer will view with the price (total after decrease product price) and the real price (total of products prices with out discounts), in that way will get the attention of user and he can know the discount. additionally when user place the order that include offer the invoice will generate in details by all products with discount that made in the products. also consider the normal way of adding one product by it price and user can create an order by it. also consider the user can place order that include many offers and also can add extra products that not include an offer, consider this complicate case. the admin can set the max and min quantity for specific product or offer (ex user can only add to cert a specific offer 3 time, and he cant add more) so the user must alert with if he cross the min or max qty. option for delivery the order or pick up, consider this feature in both side (mobile app, admin dashboard). the app must receive notifications for (new offers, order track notifications, ...etc.). users must register by mobile number and email and first name last name and password, the confirmations of the account cant done with phone number, login must done by email and password, forget pass must done with phone confirmations code SMS"
 
+## Clarifications
+
+### Session 2025-11-05
+
+- Q: When an admin modifies or deactivates an offer that's currently in a customer's cart, how should the system behave? → A: Show a warning message when user opens cart that an offer has changed/is no longer available, allow user to remove it before proceeding
+- Q: How long should SMS verification codes (for account confirmation and password reset) remain valid before expiring? → A: 30 minutes
+- Q: What password strength requirements should be enforced during registration and password reset? → A: Minimum 8 characters with no other restrictions (allow any characters)
+- Q: How long should user authentication sessions remain valid before requiring re-login? → A: 30 days
+- Q: When SMS delivery fails (verification code doesn't reach the user), what should the system allow? → A: Allow up to 3 resend attempts within 1 hour, then require user to contact support or wait for cooldown period
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - User Registration and Account Management (Priority: P1)
@@ -17,11 +27,14 @@ As a new customer, I want to create an account so that I can place orders for gr
 
 **Acceptance Scenarios**:
 
-1. **Given** I am a new user on the registration page, **When** I provide mobile number, email, first name, last name, and password, **Then** the system sends a verification code to my phone number
-2. **Given** I received a verification code, **When** I enter the correct code, **Then** my account is confirmed and activated
-3. **Given** I have a registered account, **When** I enter my email and password on the login page, **Then** I am logged into the app
-4. **Given** I forgot my password, **When** I request password reset, **Then** the system sends a verification code to my registered phone number
-5. **Given** I received a password reset code, **When** I enter the code and set a new password, **Then** my password is updated and I can login with the new password
+1. **Given** I am a new user on the registration page, **When** I provide mobile number, email, first name, last name, and password (minimum 8 characters), **Then** the system sends a verification code to my phone number
+2. **Given** I am registering, **When** I provide a password shorter than 8 characters, **Then** the system rejects it with a clear error message
+3. **Given** I did not receive a verification code, **When** I request to resend the code (up to 3 times within 1 hour), **Then** the system sends a new verification code
+4. **Given** I have already requested 3 resends within 1 hour, **When** I attempt another resend, **Then** the system blocks the request and informs me to wait or contact support
+5. **Given** I received a verification code, **When** I enter the correct code, **Then** my account is confirmed and activated
+6. **Given** I have a registered account, **When** I enter my email and password on the login page, **Then** I am logged into the app
+7. **Given** I forgot my password, **When** I request password reset, **Then** the system sends a verification code to my registered phone number
+8. **Given** I received a password reset code, **When** I enter the code and set a new password (minimum 8 characters), **Then** my password is updated and I can login with the new password
 
 ---
 
@@ -150,11 +163,11 @@ As an admin, I want to view and manage customer orders so that I can fulfill del
 ### Edge Cases
 
 - What happens when a customer tries to add an offer to cart that has a maximum quantity limit and they already have the maximum in their cart?
-- How does the system handle when an admin deletes or deactivates an offer that is currently in a customer's cart?
+- When an admin deletes or deactivates an offer that is currently in a customer's cart, the system displays a warning message when the user opens their cart, indicating the offer has changed or is no longer available, and requires the user to remove it before proceeding to checkout
 - What happens when a customer's cart contains items with quantity limits and they try to place multiple orders quickly?
 - How does the system handle concurrent offer modifications by admin while customers are actively browsing?
-- What happens when a phone number verification SMS fails to deliver during registration or password reset?
-- How does the system handle invalid or expired verification codes?
+- When SMS delivery fails during registration or password reset, users can request up to 3 resend attempts within a 1-hour period. After 3 attempts, the system blocks further resends until the cooldown period expires or the user contacts support.
+- SMS verification codes (for both account confirmation and password reset) expire after 30 minutes. The system rejects expired codes with a clear error message, prompting the user to request a new code.
 - What happens when a customer places an order and then immediately tries to place another order with the same limited-quantity offers?
 - How does the system handle pickup time slots that become unavailable after customer selects them?
 - What happens when delivery address is outside the delivery service area?
@@ -166,10 +179,17 @@ As an admin, I want to view and manage customer orders so that I can fulfill del
 #### User Registration and Authentication
 
 - **FR-001**: System MUST allow users to register with mobile number, email, first name, last name, and password
+- **FR-001-PASSWORD**: System MUST enforce password minimum length of 8 characters with no character composition restrictions (allow any characters)
 - **FR-002**: System MUST send a phone verification code via SMS to confirm new accounts
+- **FR-002-RESEND**: System MUST allow users to request resending of SMS verification codes up to 3 times within a 1-hour period
+- **FR-002-LIMIT**: System MUST block further resend attempts after 3 attempts within 1 hour, requiring user to wait for the cooldown period to expire or contact support
 - **FR-003**: System MUST only activate accounts after successful phone number verification
 - **FR-004**: System MUST allow users to login using their email and password combination
+- **FR-004-SESSION**: System MUST maintain user authentication sessions for 30 days with sliding expiration (session extends with each user activity)
+- **FR-004-REAUTH**: System MUST require re-login after 30 days of inactivity
 - **FR-005**: System MUST provide password reset functionality via SMS verification code sent to registered phone number
+- **FR-005-EXPIRY**: System MUST expire SMS verification codes (both account confirmation and password reset) after 30 minutes
+- **FR-005-VALIDATION**: System MUST reject expired verification codes and provide clear error messaging to users
 - **FR-006**: System MUST validate email format during registration
 - **FR-007**: System MUST validate phone number format during registration
 - **FR-008**: System MUST prevent duplicate registrations with the same email or phone number
@@ -199,6 +219,7 @@ As an admin, I want to view and manage customer orders so that I can fulfill del
 - **FR-026**: Mobile app MUST support carts containing multiple offers and individual products simultaneously
 - **FR-027**: Mobile app MUST display cart with clear separation between offers and individual products
 - **FR-028**: Mobile app MUST calculate cart totals accounting for all offer discounts
+- **FR-029-CART**: Mobile app MUST validate cart contents when user opens cart and display a warning message if any offers have been modified or deactivated by admin, preventing checkout until user removes the affected items
 
 #### Order Placement and Fulfillment
 
