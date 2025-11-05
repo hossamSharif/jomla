@@ -1,0 +1,309 @@
+openapi: 3.0.3
+info:
+  title: Payment Verification API
+  description: Cloud Functions API for verifying offline payment submissions and managing payment status
+  version: 1.0.0
+  contact:
+    name: Jomla Development Team
+
+servers:
+  - url: https://us-central1-{project-id}.cloudfunctions.net
+    description: Firebase Cloud Functions
+
+paths:
+  /verifyOfflinePayment:
+    post:
+      summary: Verify or reject an offline payment proof
+      description: |
+        Admin-only endpoint to approve or reject a pending offline payment submission.
+        Upon approval, order status is updated and customer is notified.
+      operationId: verifyOfflinePayment
+      tags:
+        - Payment Verification
+      security:
+        - firebaseAuth: []
+        - adminToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - proofId
+                - action
+              properties:
+                proofId:
+                  type: string
+                  description: Firestore document ID of the offline payment proof
+                  example: "proof_abc123xyz"
+                action:
+                  type: string
+                  enum: [approve, reject]
+                  description: Verification action
+                rejectionReason:
+                  type: string
+                  description: Required if action is 'reject'. Reason for rejection shown to customer.
+                  example: "Transaction ID does not match our records"
+                  maxLength: 500
+                adminNotes:
+                  type: string
+                  description: Optional internal notes (not shown to customer)
+                  example: "Called bank to verify, transaction not found"
+                  maxLength: 1000
+      responses:
+        '200':
+          description: Verification completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  proofId:
+                    type: string
+                    example: "proof_abc123xyz"
+                  status:
+                    type: string
+                    enum: [approved, rejected]
+                    example: "approved"
+                  orderId:
+                    type: string
+                    example: "order_xyz789"
+                  orderStatus:
+                    type: string
+                    description: Updated order status after verification
+                    example: "confirmed"
+                  message:
+                    type: string
+                    example: "Payment verified successfully. Order confirmed."
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingReason:
+                  summary: Rejection reason required
+                  value:
+                    error: "invalid-argument"
+                    message: "rejectionReason is required when action is 'reject'"
+                invalidProof:
+                  summary: Proof not found
+                  value:
+                    error: "not-found"
+                    message: "Payment proof not found"
+        '403':
+          description: Unauthorized - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "permission-denied"
+                message: "Admin access required to verify payments"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /validateTransactionImage:
+    post:
+      summary: Validate uploaded transaction image
+      description: |
+        Triggered automatically by Firebase Storage when a transaction image is uploaded.
+        Validates format, size, and optimizes the image. Deletes invalid uploads.
+      operationId: validateTransactionImage
+      tags:
+        - Payment Verification
+      x-google-backend:
+        address: gs://bucket/transaction-proofs/{userId}/{orderId}/{fileName}
+        trigger: finalize
+      requestBody:
+        description: Firebase Storage object metadata (automatically provided by trigger)
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: File path in storage
+                  example: "transaction-proofs/user123/order456/1699200000.jpg"
+                bucket:
+                  type: string
+                  example: "jomla-app.appspot.com"
+                contentType:
+                  type: string
+                  example: "image/jpeg"
+                size:
+                  type: string
+                  example: "2485760"
+      responses:
+        '200':
+          description: Image validated and optimized successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  originalSize:
+                    type: number
+                    description: Original file size in bytes
+                    example: 2485760
+                  optimizedSize:
+                    type: number
+                    description: Optimized file size in bytes
+                    example: 856320
+                  format:
+                    type: string
+                    example: "jpeg"
+                  dimensions:
+                    type: object
+                    properties:
+                      width:
+                        type: number
+                        example: 1920
+                      height:
+                        type: number
+                        example: 1080
+        '400':
+          description: Invalid image (deleted from storage)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidFormat:
+                  summary: Unsupported format
+                  value:
+                    error: "invalid-argument"
+                    message: "Only JPG/PNG images are allowed"
+                tooLarge:
+                  summary: File too large
+                  value:
+                    error: "invalid-argument"
+                    message: "Image must be under 5MB"
+
+  /updatePaymentStatus:
+    post:
+      summary: Update payment status for COD orders
+      description: |
+        Driver or admin endpoint to mark COD payment as collected or failed.
+        Updates order payment status and triggers customer notification.
+      operationId: updatePaymentStatus
+      tags:
+        - Payment Management
+      security:
+        - firebaseAuth: []
+        - adminToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderId
+                - paymentStatus
+              properties:
+                orderId:
+                  type: string
+                  description: Order ID to update
+                  example: "order_xyz789"
+                paymentStatus:
+                  type: string
+                  enum: [collected, failed]
+                  description: New payment status
+                collectedAmount:
+                  type: number
+                  description: Actual amount collected in cents (required if status is 'collected')
+                  example: 2999
+                collectionNotes:
+                  type: string
+                  description: Optional notes about collection
+                  example: "Customer paid exact amount"
+                  maxLength: 500
+      responses:
+        '200':
+          description: Payment status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  orderId:
+                    type: string
+                    example: "order_xyz789"
+                  paymentStatus:
+                    type: string
+                    example: "collected"
+                  orderStatus:
+                    type: string
+                    description: Updated order status
+                    example: "completed"
+                  message:
+                    type: string
+                    example: "Payment marked as collected"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "invalid-argument"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid request parameters"
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+
+  securitySchemes:
+    firebaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase Authentication ID token
+    adminToken:
+      type: apiKey
+      in: header
+      name: X-Admin-Token
+      description: Admin custom claim required (auth.token.admin == true)

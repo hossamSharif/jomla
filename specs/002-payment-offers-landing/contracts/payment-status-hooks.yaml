@@ -1,0 +1,333 @@
+openapi: 3.0.3
+info:
+  title: Payment Status Webhooks
+  description: |
+    Firestore-triggered webhooks for payment status changes and automated workflows.
+    These are internal Cloud Functions triggered by database changes, not external HTTP endpoints.
+  version: 1.0.0
+  contact:
+    name: Jomla Development Team
+
+servers:
+  - url: https://us-central1-{project-id}.cloudfunctions.net
+    description: Firebase Cloud Functions (internal triggers)
+
+paths:
+  /onPaymentProofStatusChange:
+    post:
+      summary: Triggered when payment proof status changes
+      description: |
+        Firestore trigger: `offlinePaymentProofs/{proofId}` onUpdate
+        Handles automated workflows when payment proof status changes (pending → approved/rejected).
+      operationId: onPaymentProofStatusChange
+      tags:
+        - Webhooks
+        - Payment Proofs
+      x-google-backend:
+        path: offlinePaymentProofs/{proofId}
+        trigger: onUpdate
+      requestBody:
+        description: Firestore change object (before/after snapshots)
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - before
+                - after
+              properties:
+                before:
+                  $ref: '#/components/schemas/OfflinePaymentProof'
+                  description: Document state before update
+                after:
+                  $ref: '#/components/schemas/OfflinePaymentProof'
+                  description: Document state after update
+                context:
+                  type: object
+                  properties:
+                    proofId:
+                      type: string
+                      example: "proof_abc123"
+      x-workflow-actions:
+        - condition: status changed to 'approved'
+          actions:
+            - Update linked order paymentStatus to 'verified'
+            - Update order status to 'confirmed'
+            - Send push notification to customer (payment approved)
+            - Log event to analytics
+        - condition: status changed to 'rejected'
+          actions:
+            - Send push notification to customer (payment rejected with reason)
+            - Update order to allow resubmission
+            - Log event to analytics
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  actionsPerformed:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - "order_status_updated"
+                      - "notification_sent"
+                      - "analytics_logged"
+
+  /onOrderPaymentMethodSet:
+    post:
+      summary: Triggered when order is created with payment method
+      description: |
+        Firestore trigger: `orders/{orderId}` onCreate
+        Initializes payment workflow based on payment method (COD, offline, online).
+      operationId: onOrderPaymentMethodSet
+      tags:
+        - Webhooks
+        - Orders
+      x-google-backend:
+        path: orders/{orderId}
+        trigger: onCreate
+      requestBody:
+        description: Firestore create event with new order document
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  $ref: '#/components/schemas/Order'
+                context:
+                  type: object
+                  properties:
+                    orderId:
+                      type: string
+                      example: "order_xyz789"
+      x-workflow-actions:
+        - condition: paymentMethod is 'cod'
+          actions:
+            - Set paymentStatus to 'pending'
+            - Send order confirmation to customer (COD instructions)
+            - Notify admin of new COD order
+        - condition: paymentMethod is 'offline'
+          actions:
+            - Verify offlinePaymentProofId exists
+            - Set paymentStatus to 'pending'
+            - Add order to verification queue for admin
+            - Send order confirmation to customer (verification timeline)
+        - condition: paymentMethod is 'online'
+          actions:
+            - Verify payment already processed
+            - Set paymentStatus to 'verified'
+            - Proceed with order confirmation workflow (from feature 001)
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  paymentMethod:
+                    type: string
+                    example: "cod"
+                  initialStatus:
+                    type: string
+                    example: "pending"
+
+  /onCODPaymentCollected:
+    post:
+      summary: Triggered when COD payment is marked as collected
+      description: |
+        Firestore trigger: `orders/{orderId}` onUpdate (paymentStatus changed to 'collected')
+        Finalizes order when COD payment is collected during delivery.
+      operationId: onCODPaymentCollected
+      tags:
+        - Webhooks
+        - COD Payments
+      x-google-backend:
+        path: orders/{orderId}
+        trigger: onUpdate
+        condition: paymentStatus changed to 'collected'
+      requestBody:
+        description: Firestore change object
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - before
+                - after
+              properties:
+                before:
+                  $ref: '#/components/schemas/Order'
+                after:
+                  $ref: '#/components/schemas/Order'
+                context:
+                  type: object
+                  properties:
+                    orderId:
+                      type: string
+                      example: "order_xyz789"
+      x-workflow-actions:
+        - condition: paymentStatus changed from 'pending' to 'collected'
+          actions:
+            - Update order status to 'completed'
+            - Record collection details (amount, timestamp, collector)
+            - Send completion notification to customer
+            - Update admin dashboard metrics
+            - Generate financial reconciliation record
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  orderCompleted:
+                    type: boolean
+                    example: true
+
+  /onPaymentVerificationTimeout:
+    post:
+      summary: Triggered when payment verification exceeds SLA (24 hours)
+      description: |
+        Cloud Scheduler trigger: Runs hourly to check for payment proofs pending > 24 hours
+        Sends escalation notifications to admins for overdue verifications.
+      operationId: onPaymentVerificationTimeout
+      tags:
+        - Webhooks
+        - SLA Monitoring
+      x-google-backend:
+        schedule: "0 * * * *"  # Every hour
+      x-workflow-actions:
+        - condition: payment proof pending > 24 hours
+          actions:
+            - Query offlinePaymentProofs where status='pending' and submittedAt < (now - 24h)
+            - Send email/Slack notification to admin team
+            - Flag order as 'verification_overdue' in dashboard
+            - Optionally notify customer of delay
+      responses:
+        '200':
+          description: SLA check completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  overdueCount:
+                    type: integer
+                    description: Number of overdue verifications found
+                    example: 3
+                  notificationsSent:
+                    type: integer
+                    example: 3
+
+components:
+  schemas:
+    OfflinePaymentProof:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        userId:
+          type: string
+        transactionId:
+          type: string
+        transactionImageUrl:
+          type: string
+        expectedAmount:
+          type: number
+        status:
+          type: string
+          enum: [pending, approved, rejected, resubmitted]
+        submittedAt:
+          type: string
+          format: date-time
+        reviewedAt:
+          type: string
+          format: date-time
+        reviewedBy:
+          type: string
+        rejectionReason:
+          type: string
+        adminNotes:
+          type: string
+        statusHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              updatedBy:
+                type: string
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        orderNumber:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [cod, offline, online]
+        paymentStatus:
+          type: string
+          enum: [pending, verified, collected, failed]
+        offlinePaymentProofId:
+          type: string
+        codCollectedAmount:
+          type: number
+        codCollectedAt:
+          type: string
+          format: date-time
+        codCollectedBy:
+          type: string
+        total:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+  x-webhook-delivery:
+    description: Webhook delivery guarantees and retry behavior
+    guarantees:
+      - At-least-once delivery (Firestore triggers may retry on failure)
+      - Idempotency required (webhooks may be called multiple times for same event)
+      - Automatic retries up to 7 days for failed invocations
+    retry-policy:
+      max-attempts: 3
+      backoff: exponential
+      max-backoff: 60s
+    timeout: 60s
