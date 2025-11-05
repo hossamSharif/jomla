@@ -31,7 +31,16 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**Review the constitution at `.specify/memory/constitution.md` and verify compliance with:**
+
+- [ ] **I. UI Component Standards**: Admin dashboard uses shadcn/ui MCP tools for UI components
+- [ ] **II. Mobile Development Best Practices**: React Native + Expo SDK 50+ with proper patterns (hooks, Expo Router, zustand, @tanstack/react-query)
+- [ ] **III. Cross-Platform Consistency**: Features tested and work on both iOS and Android
+- [ ] **IV. Firebase-First Architecture**: Uses Firestore, Firebase Auth, Cloud Functions, Storage, and FCM appropriately
+- [ ] **V. Type Safety**: TypeScript strict mode across all projects, shared types in `shared/types/`
+- [ ] **VI. Testing Requirements**: Jest + Testing Library + Firebase Emulator Suite for critical business logic
+
+**Violations**: If any principles are violated, document in the Complexity Tracking section below with justification.
 
 ## Project Structure
 
