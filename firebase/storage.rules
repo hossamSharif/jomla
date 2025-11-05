@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    function isValidImage() {
+      return request.resource.size < 5 * 1024 * 1024  // Max 5MB
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    function isValidPDF() {
+      return request.resource.size < 10 * 1024 * 1024  // Max 10MB
+        && request.resource.contentType == 'application/pdf';
+    }
+
+    // Product Images
+    match /products/{productId}/{allPaths=**} {
+      // Anyone authenticated can read
+      allow read: if isAuthenticated();
+
+      // Only admins can upload product images
+      allow write: if isAdmin() && isValidImage();
+    }
+
+    // Offer Images
+    match /offers/{offerId}/{allPaths=**} {
+      // Anyone authenticated can read
+      allow read: if isAuthenticated();
+
+      // Only admins can upload offer images
+      allow write: if isAdmin() && isValidImage();
+    }
+
+    // Order Invoices
+    match /invoices/{orderId}/{allPaths=**} {
+      // Users can read their own order invoices
+      // Note: This is simplified; actual validation should check order ownership
+      allow read: if isAuthenticated();
+
+      // Only Cloud Functions can write invoices
+      allow write: if false;
+    }
+
+    // User Profile Images (future feature)
+    match /users/{userId}/{allPaths=**} {
+      // Users can read their own profile images
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+
+      // Users can upload their own profile images
+      allow write: if isAuthenticated()
+        && request.auth.uid == userId
+        && isValidImage();
+    }
+  }
+}
