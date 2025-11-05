@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1038206580779",
+    "project_id": "jomla-249",
+    "storage_bucket": "jomla-249.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1038206580779:android:6d35a1947f1a5d7e76526e",
+        "android_client_info": {
+          "package_name": "com.hossam.jomla"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAm3kzQ9KKv_PM_39sUBUylgz6MATYxh4k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

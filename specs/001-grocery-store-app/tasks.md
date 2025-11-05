@@ -35,11 +35,11 @@ This project uses a monorepo structure:
 - [X] T005 [P] Create shared TypeScript types directory in shared/types/
 - [X] T006 Configure Firebase project and initialize Firestore, Auth, Storage, Functions
 - [X] T007 [P] Install mobile dependencies: expo-notifications, expo-sms, @react-navigation/native, zustand, @tanstack/react-query, Firebase SDK
-- [ ] T008 [P] Install admin dependencies: Tailwind CSS, shadcn/ui, react-hook-form, Firebase Admin SDK
-- [ ] T009 [P] Install functions dependencies: Firebase Admin SDK, Twilio SDK
-- [ ] T010 [P] Setup environment configuration files: mobile/.env, admin/.env.local, functions/.env
-- [ ] T011 [P] Configure ESLint and Prettier for mobile/, admin/, and functions/
-- [ ] T012 Setup Firebase emulator configuration in firebase.json for local development
+- [X] T008 [P] Install admin dependencies: Tailwind CSS, shadcn/ui, react-hook-form, Firebase Admin SDK
+- [X] T009 [P] Install functions dependencies: Firebase Admin SDK, Twilio SDK
+- [X] T010 [P] Setup environment configuration files: mobile/.env, admin/.env.local, functions/.env
+- [X] T011 [P] Configure ESLint and Prettier for mobile/, admin/, and functions/
+- [X] T012 Setup Firebase emulator configuration in firebase.json for local development
 
 ---
 
