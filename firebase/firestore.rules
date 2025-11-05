@@ -1,0 +1,98 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isOwner(userId);
+
+      // Users can update their own profile (limited fields)
+      allow update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          'firstName', 'lastName', 'fcmTokens', 'lastLoginAt',
+          'sessionExpiresAt', 'updatedAt'
+        ]);
+
+      // Only Cloud Functions can create users (via Firebase Auth trigger)
+      allow create: if false;
+      allow delete: if false;
+    }
+
+    // Products Collection
+    match /products/{productId} {
+      // Any authenticated user can read active products
+      allow read: if isAuthenticated() && resource.data.status == 'active';
+
+      // Only admins can write
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Offers Collection
+    match /offers/{offerId} {
+      // Any authenticated user can read active offers within validity period
+      allow read: if isAuthenticated()
+        && resource.data.status == 'active'
+        && (resource.data.validFrom == null || resource.data.validFrom <= request.time)
+        && (resource.data.validUntil == null || resource.data.validUntil >= request.time);
+
+      // Only admins can write
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Carts Collection
+    match /carts/{userId} {
+      // Users can only access their own cart
+      allow read, write: if isOwner(userId);
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      // Users can read their own orders
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // Users can create orders (validated by Cloud Function)
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+
+      // Only admins can update orders
+      allow update: if isAdmin();
+
+      // No one can delete orders
+      allow delete: if false;
+    }
+
+    // Admin Users Collection
+    match /adminUsers/{adminId} {
+      // Only authenticated admins can read
+      allow read: if isAdmin();
+
+      // Only super admins can create/update admins
+      allow write: if isAdmin()
+        && get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)).data.role == 'super_admin';
+    }
+
+    // Notifications Collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated()
+        && (resource.data.targetUserId == request.auth.uid || resource.data.targetType == 'all');
+
+      // Only Cloud Functions can write notifications
+      allow write: if false;
+    }
+  }
+}
