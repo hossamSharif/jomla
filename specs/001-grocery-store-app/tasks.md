@@ -161,24 +161,24 @@ This project uses a monorepo structure:
 
 ### Implementation for User Story 4
 
-- [ ] T073 [P] [US4] Create Order Firestore service in mobile/src/services/orderService.ts for order CRUD operations
-- [ ] T074 [US4] Implement createOrder Cloud Function in functions/src/orders/createOrder.ts with full cart validation
-- [ ] T075 [P] [US4] Implement generateInvoice Cloud Function in functions/src/orders/generateInvoice.ts using pdfkit
-- [ ] T076 [US4] Create checkout screen at mobile/app/checkout/index.tsx with fulfillment method selection
-- [ ] T077 [P] [US4] Create delivery details form component in mobile/src/components/checkout/DeliveryForm.tsx
-- [ ] T078 [P] [US4] Create pickup details form component in mobile/src/components/checkout/PickupForm.tsx
-- [ ] T079 [US4] Create order confirmation screen at mobile/app/orders/[orderId].tsx showing invoice details
-- [ ] T080 [US4] Implement order submission logic in mobile/src/services/orderService.ts with error handling
-- [ ] T081 [US4] Create order history screen at mobile/app/orders/index.tsx listing user's orders
-- [ ] T082 [P] [US4] Create OrderCard component in mobile/src/components/orders/OrderCard.tsx with status display
-- [ ] T083 [US4] Implement invoice PDF generation template in functions/src/orders/invoiceTemplate.ts with offer product breakdown
-- [ ] T084 [US4] Upload generated invoices to Firebase Storage in functions/src/orders/generateInvoice.ts
-- [ ] T085 [US4] Add invoice download/view functionality in order details screen
-- [ ] T086 [US4] Clear cart after successful order placement
-- [ ] T087 [US4] Display delivery fee calculation for delivery orders
-- [ ] T088 [US4] Implement order number generation (ORD-YYYYMMDD-####) in functions/src/utils/orderNumber.ts
+- [X] T073 [P] [US4] Create Order Firestore service in mobile/src/services/orderService.ts for order CRUD operations
+- [X] T074 [US4] Implement createOrder Cloud Function in functions/src/orders/createOrder.ts with full cart validation
+- [X] T075 [P] [US4] Implement generateInvoice Cloud Function in functions/src/orders/generateInvoice.ts using pdfkit
+- [X] T076 [US4] Create checkout screen at mobile/app/checkout/index.tsx with fulfillment method selection
+- [X] T077 [P] [US4] Create delivery details form component in mobile/src/components/checkout/DeliveryForm.tsx
+- [X] T078 [P] [US4] Create pickup details form component in mobile/src/components/checkout/PickupForm.tsx
+- [X] T079 [US4] Create order confirmation screen at mobile/app/orders/[orderId].tsx showing invoice details
+- [X] T080 [US4] Implement order submission logic in mobile/src/services/orderService.ts with error handling
+- [X] T081 [US4] Create order history screen at mobile/app/orders/index.tsx listing user's orders
+- [X] T082 [P] [US4] Create OrderCard component in mobile/src/components/orders/OrderCard.tsx with status display
+- [X] T083 [US4] Implement invoice PDF generation template in functions/src/orders/invoiceTemplate.ts with offer product breakdown
+- [X] T084 [US4] Upload generated invoices to Firebase Storage in functions/src/orders/generateInvoice.ts
+- [X] T085 [US4] Add invoice download/view functionality in order details screen
+- [X] T086 [US4] Clear cart after successful order placement
+- [X] T087 [US4] Display delivery fee calculation for delivery orders
+- [X] T088 [US4] Implement order number generation (ORD-YYYYMMDD-####) in functions/src/utils/orderNumber.ts
 
-**Checkpoint**: Users should be able to complete full checkout flow with delivery or pickup and receive invoices
+**Checkpoint**: Users should be able to complete full checkout flow with delivery or pickup and receive invoices ✅ COMPLETE
 
 ---
 

@@ -17,6 +17,10 @@ export * from './auth/resetPassword';
 // Cart Functions
 export * from './cart/validateCart';
 
+// Order Functions
+export * from './orders/createOrder';
+export * from './orders/generateInvoice';
+
 // Placeholder function for initial deployment
 import * as functions from 'firebase-functions';
 
