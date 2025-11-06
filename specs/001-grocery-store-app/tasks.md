@@ -190,21 +190,21 @@ This project uses a monorepo structure:
 
 ### Implementation for User Story 5
 
-- [ ] T089 [P] [US5] Configure expo-notifications in mobile/app.json with FCM credentials
-- [ ] T090 [P] [US5] Implement push notification permissions request in mobile/src/services/notificationService.ts
-- [ ] T091 [US5] Implement sendOfferNotification Cloud Function in functions/src/notifications/sendOfferNotification.ts
-- [ ] T092 [P] [US5] Implement sendOrderStatusNotification Cloud Function in functions/src/notifications/sendOrderStatusNotification.ts
-- [ ] T093 [US5] Setup notification listeners in mobile/app/_layout.tsx for foreground notifications
-- [ ] T094 [US5] Implement deep linking for notification taps in mobile/app.json and mobile/app/_layout.tsx
-- [ ] T095 [P] [US5] Create notification handler utility in mobile/src/utils/notificationHandler.ts for routing
-- [ ] T096 [US5] Add FCM token refresh logic in mobile/src/services/notificationService.ts
-- [ ] T097 [US5] Store notification history in Firestore notifications collection via Cloud Functions
-- [ ] T098 [US5] Handle notification tap to open offer details screen
-- [ ] T099 [US5] Handle notification tap to open order tracking screen
-- [ ] T100 [US5] Implement silent notifications for cart invalidation warnings
-- [ ] T101 [US5] Add notification preferences to user profile (optional)
+- [X] T089 [P] [US5] Configure expo-notifications in mobile/app.json with FCM credentials
+- [X] T090 [P] [US5] Implement push notification permissions request in mobile/src/services/notificationService.ts
+- [X] T091 [US5] Implement sendOfferNotification Cloud Function in functions/src/notifications/sendOfferNotification.ts
+- [X] T092 [P] [US5] Implement sendOrderStatusNotification Cloud Function in functions/src/notifications/sendOrderStatusNotification.ts
+- [X] T093 [US5] Setup notification listeners in mobile/app/_layout.tsx for foreground notifications
+- [X] T094 [US5] Implement deep linking for notification taps in mobile/app.json and mobile/app/_layout.tsx
+- [X] T095 [P] [US5] Create notification handler utility in mobile/src/utils/notificationHandler.ts for routing
+- [X] T096 [US5] Add FCM token refresh logic in mobile/src/services/notificationService.ts
+- [X] T097 [US5] Store notification history in Firestore notifications collection via Cloud Functions
+- [X] T098 [US5] Handle notification tap to open offer details screen
+- [X] T099 [US5] Handle notification tap to open order tracking screen
+- [X] T100 [US5] Implement silent notifications for cart invalidation warnings
+- [X] T101 [US5] Add notification preferences to user profile (optional)
 
-**Checkpoint**: Push notifications should work for new offers and order status changes with deep linking
+**Checkpoint**: Push notifications should work for new offers and order status changes with deep linking ✅ COMPLETE
 
 ---
 

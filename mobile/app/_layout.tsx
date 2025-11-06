@@ -6,6 +6,7 @@
 
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import { Linking } from 'react-native';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { queryClient, persistOptions } from '../src/services/query-client';
 import { useAuthStore } from '../src/store';
@@ -14,7 +15,13 @@ import { initializeSessionMonitoring } from '../src/services/sessionService';
 import {
   setupNotificationListeners,
   configureNotificationChannels,
+  setupFCMTokenRefresh,
 } from '../src/services/notificationService';
+import {
+  handleForegroundNotification,
+  handleNotificationTap,
+  handleDeepLink,
+} from '../src/utils/notificationHandler';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -35,31 +42,47 @@ export default function RootLayout() {
     }
   }, [user?.uid]);
 
+  // Setup FCM token refresh monitoring
+  useEffect(() => {
+    if (user?.uid) {
+      const cleanup = setupFCMTokenRefresh(user.uid);
+      return () => cleanup();
+    }
+  }, [user?.uid]);
+
   // Setup notification listeners
   useEffect(() => {
+    // Configure notification channels for Android
     configureNotificationChannels();
 
+    // Setup notification listeners
     const cleanup = setupNotificationListeners(
-      (notification) => {
-        // Handle foreground notification
-        console.log('Foreground notification:', notification);
-      },
-      (response) => {
-        // Handle notification tap
-        console.log('Notification tapped:', response);
-
-        // Navigate based on notification data
-        const data = response.notification.request.content.data;
-
-        if (data.orderId) {
-          router.push(`/orders/${data.orderId}`);
-        } else if (data.offerId) {
-          router.push(`/offers/${data.offerId}`);
-        }
-      }
+      handleForegroundNotification,
+      handleNotificationTap
     );
 
     return () => cleanup();
+  }, []);
+
+  // Setup deep linking
+  useEffect(() => {
+    // Handle initial URL if app was opened via deep link
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        console.log('Initial deep link URL:', url);
+        handleDeepLink(url);
+      }
+    });
+
+    // Listen for deep link events while app is running
+    const subscription = Linking.addEventListener('url', (event) => {
+      console.log('Deep link event:', event.url);
+      handleDeepLink(event.url);
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   // Auth redirect logic

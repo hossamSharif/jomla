@@ -21,6 +21,10 @@ export * from './cart/validateCart';
 export * from './orders/createOrder';
 export * from './orders/generateInvoice';
 
+// Notification Functions
+export * from './notifications/sendOfferNotification';
+export * from './notifications/sendOrderStatusNotification';
+
 // Placeholder function for initial deployment
 import * as functions from 'firebase-functions';
 

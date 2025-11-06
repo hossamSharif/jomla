@@ -43,6 +43,12 @@ export async function createUser(
       isPhoneVerified: false,
       verificationAttempts: 0,
       fcmTokens: [],
+      notificationPreferences: {
+        enableOfferNotifications: true,
+        enableOrderNotifications: true,
+        enableCartNotifications: true,
+        enablePromotionalNotifications: true,
+      },
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     };
@@ -328,5 +334,69 @@ export async function resetVerificationAttempts(uid: string): Promise<void> {
   } catch (error: any) {
     console.error('Reset verification attempts error:', error);
     // Don't throw - this is not critical
+  }
+}
+
+/**
+ * Update notification preferences for a user
+ */
+export async function updateNotificationPreferences(
+  uid: string,
+  preferences: Partial<{
+    enableOfferNotifications: boolean;
+    enableOrderNotifications: boolean;
+    enableCartNotifications: boolean;
+    enablePromotionalNotifications: boolean;
+  }>
+): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', uid);
+
+    await updateDoc(userRef, {
+      'notificationPreferences.enableOfferNotifications':
+        preferences.enableOfferNotifications,
+      'notificationPreferences.enableOrderNotifications':
+        preferences.enableOrderNotifications,
+      'notificationPreferences.enableCartNotifications':
+        preferences.enableCartNotifications,
+      'notificationPreferences.enablePromotionalNotifications':
+        preferences.enablePromotionalNotifications,
+      updatedAt: Timestamp.now(),
+    });
+
+    console.log('Notification preferences updated successfully');
+  } catch (error: any) {
+    console.error('Update notification preferences error:', error);
+    throw new Error(error.message || 'Failed to update notification preferences');
+  }
+}
+
+/**
+ * Get notification preferences for a user
+ */
+export async function getNotificationPreferences(uid: string): Promise<{
+  enableOfferNotifications: boolean;
+  enableOrderNotifications: boolean;
+  enableCartNotifications: boolean;
+  enablePromotionalNotifications: boolean;
+} | null> {
+  try {
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      return null;
+    }
+
+    const userData = userSnap.data() as User;
+    return userData.notificationPreferences || {
+      enableOfferNotifications: true,
+      enableOrderNotifications: true,
+      enableCartNotifications: true,
+      enablePromotionalNotifications: true,
+    };
+  } catch (error: any) {
+    console.error('Get notification preferences error:', error);
+    throw new Error(error.message || 'Failed to get notification preferences');
   }
 }

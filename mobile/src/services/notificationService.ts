@@ -316,3 +316,84 @@ export async function clearBadgeCount(): Promise<void> {
     console.error('Clear badge count error:', error);
   }
 }
+
+/**
+ * Setup FCM token refresh monitoring
+ * Monitors for token changes and updates user document
+ * @param uid User ID
+ * @returns Cleanup function to stop monitoring
+ */
+export function setupFCMTokenRefresh(uid: string): () => void {
+  let intervalId: NodeJS.Timeout;
+  let currentToken: string | null = null;
+
+  const checkTokenRefresh = async () => {
+    try {
+      const newToken = await getExpoPushToken();
+
+      if (newToken && newToken !== currentToken) {
+        console.log('FCM token changed, updating...');
+
+        // Remove old token if exists
+        if (currentToken) {
+          await removeFCMToken(uid, currentToken);
+        }
+
+        // Add new token
+        await addFCMToken(uid, newToken);
+        currentToken = newToken;
+
+        console.log('FCM token refreshed successfully');
+      }
+    } catch (error: any) {
+      console.error('Token refresh check error:', error);
+    }
+  };
+
+  // Check immediately
+  checkTokenRefresh();
+
+  // Check every 24 hours
+  intervalId = setInterval(checkTokenRefresh, 24 * 60 * 60 * 1000);
+
+  // Return cleanup function
+  return () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+  };
+}
+
+/**
+ * Refresh FCM token manually
+ * @param uid User ID
+ * @returns true if token was refreshed, false otherwise
+ */
+export async function refreshFCMToken(uid: string): Promise<boolean> {
+  try {
+    console.log('Manually refreshing FCM token...');
+
+    // Request permissions first
+    const hasPermission = await requestNotificationPermissions();
+    if (!hasPermission) {
+      console.warn('Cannot refresh FCM token without notification permissions');
+      return false;
+    }
+
+    // Get new push token
+    const token = await getExpoPushToken();
+    if (!token) {
+      console.warn('Failed to get new push token');
+      return false;
+    }
+
+    // Register new token with user document (will update if already exists)
+    await addFCMToken(uid, token);
+
+    console.log('FCM token refreshed manually');
+    return true;
+  } catch (error: any) {
+    console.error('Manual token refresh error:', error);
+    return false;
+  }
+}

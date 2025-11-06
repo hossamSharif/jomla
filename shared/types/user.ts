@@ -6,6 +6,13 @@
 
 import { Timestamp } from 'firebase/firestore';
 
+export interface NotificationPreferences {
+  enableOfferNotifications: boolean;      // Receive notifications for new offers
+  enableOrderNotifications: boolean;      // Receive notifications for order status changes
+  enableCartNotifications: boolean;       // Receive notifications for cart invalidation
+  enablePromotionalNotifications: boolean; // Receive promotional/marketing notifications
+}
+
 export interface User {
   uid: string;                    // Firebase Auth UID (same as document ID)
   email: string;                  // Unique, used for login
@@ -26,6 +33,7 @@ export interface User {
 
   // Notifications
   fcmTokens: string[];            // Array of device tokens for push notifications
+  notificationPreferences: NotificationPreferences;
 
   // Metadata
   createdAt: Timestamp;
