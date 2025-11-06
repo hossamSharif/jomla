@@ -26,6 +26,9 @@ export * from './orders/generateInvoice';
 export * from './notifications/sendOfferNotification';
 export * from './notifications/sendOrderStatusNotification';
 
+// Admin Functions
+export * from './admin/createAdminUser';
+
 // Placeholder function for initial deployment
 import * as functions from 'firebase-functions';
 
