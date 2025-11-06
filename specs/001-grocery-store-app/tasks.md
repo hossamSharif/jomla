@@ -216,25 +216,25 @@ This project uses a monorepo structure:
 
 ### Implementation for User Story 6
 
-- [ ] T102 [P] [US6] Create admin login page at admin/app/(auth)/login/page.tsx with email/password form
-- [ ] T103 [US6] Implement admin authentication in admin/lib/auth.ts with custom claims check
-- [ ] T104 [P] [US6] Setup admin dashboard layout at admin/app/(dashboard)/layout.tsx with navigation
-- [ ] T105 [US6] Create offers list page at admin/app/(dashboard)/offers/page.tsx with data table
-- [ ] T106 [US6] Create offer creation page at admin/app/(dashboard)/offers/new/page.tsx with form
-- [ ] T107 [P] [US6] Implement offer form component in admin/components/dashboard/OfferForm.tsx with react-hook-form
-- [ ] T108 [US6] Add product selection multi-select in offer form with search
-- [ ] T109 [US6] Implement individual product discount pricing inputs in offer form
-- [ ] T110 [US6] Add real-time discount total calculation in offer form
-- [ ] T111 [US6] Implement quantity limit inputs (min/max) in offer form
-- [ ] T112 [US6] Add offer status selection (draft/active/inactive) in offer form
-- [ ] T113 [US6] Implement offer image upload to Firebase Storage in admin/lib/storage.ts
-- [ ] T114 [US6] Create offer edit page at admin/app/(dashboard)/offers/[offerId]/edit/page.tsx
-- [ ] T115 [US6] Add offer deletion with confirmation modal
-- [ ] T116 [US6] Implement offer activation/deactivation toggle in offers list
-- [ ] T117 [US6] Display offer preview showing how it appears in mobile app
-- [ ] T118 [US6] Add validity period (validFrom/validUntil) inputs in offer form
+- [X] T102 [P] [US6] Create admin login page at admin/app/(auth)/login/page.tsx with email/password form
+- [X] T103 [US6] Implement admin authentication in admin/lib/auth.ts with custom claims check
+- [X] T104 [P] [US6] Setup admin dashboard layout at admin/app/(dashboard)/layout.tsx with navigation
+- [X] T105 [US6] Create offers list page at admin/app/(dashboard)/offers/page.tsx with data table
+- [X] T106 [US6] Create offer creation page at admin/app/(dashboard)/offers/new/page.tsx with form
+- [X] T107 [P] [US6] Implement offer form component in admin/components/dashboard/OfferForm.tsx with react-hook-form
+- [X] T108 [US6] Add product selection multi-select in offer form with search
+- [X] T109 [US6] Implement individual product discount pricing inputs in offer form
+- [X] T110 [US6] Add real-time discount total calculation in offer form
+- [X] T111 [US6] Implement quantity limit inputs (min/max) in offer form
+- [X] T112 [US6] Add offer status selection (draft/active/inactive) in offer form
+- [X] T113 [US6] Implement offer image upload to Firebase Storage in admin/lib/storage.ts
+- [X] T114 [US6] Create offer edit page at admin/app/(dashboard)/offers/[offerId]/edit/page.tsx
+- [X] T115 [US6] Add offer deletion with confirmation modal
+- [X] T116 [US6] Implement offer activation/deactivation toggle in offers list
+- [X] T117 [US6] Display offer preview showing how it appears in mobile app
+- [X] T118 [US6] Add validity period (validFrom/validUntil) inputs in offer form
 
-**Checkpoint**: Admins should be able to create, edit, activate, and delete offers with full pricing control
+**Checkpoint**: Admins should be able to create, edit, activate, and delete offers with full pricing control ✅ COMPLETE
 
 ---
 
