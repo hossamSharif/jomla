@@ -7,6 +7,8 @@
  * - orders: Order processing, invoice generation
  * - notifications: Push notification triggers
  * - cart: Cart validation logic
+ * - admin: Admin user management
+ * - utils: Scheduled maintenance functions
  */
 
 // Authentication Functions
@@ -28,6 +30,9 @@ export * from './notifications/sendOrderStatusNotification';
 
 // Admin Functions
 export * from './admin/createAdminUser';
+
+// Utility & Maintenance Functions
+export * from './utils/cleanupExpiredVerificationCodes';
 
 // Placeholder function for initial deployment
 import * as functions from 'firebase-functions';

@@ -325,11 +325,11 @@ This project uses a monorepo structure:
 
 **Purpose**: Background tasks for system maintenance
 
-- [ ] T158 [P] Implement cleanupExpiredVerificationCodes scheduled function in functions/src/utils/cleanupExpiredVerificationCodes.ts
-- [ ] T159 [P] Configure Pub/Sub schedule (every 1 hour) in functions/src/index.ts
-- [ ] T160 Add monitoring and alerting for failed Cloud Functions in Firebase Console
+- [X] T158 [P] Implement cleanupExpiredVerificationCodes scheduled function in functions/src/utils/cleanupExpiredVerificationCodes.ts
+- [X] T159 [P] Configure Pub/Sub schedule (every 1 hour) in functions/src/index.ts
+- [X] T160 Add monitoring and alerting for failed Cloud Functions in Firebase Console
 
-**Checkpoint**: Automated maintenance tasks keep database clean
+**Checkpoint**: Automated maintenance tasks keep database clean ✅ COMPLETE
 
 ---
 
