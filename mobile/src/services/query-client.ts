@@ -1,10 +1,13 @@
 /**
  * React Query Configuration
  *
- * Configures TanStack Query for data fetching and caching.
+ * Configures TanStack Query for data fetching and caching with offline persistence.
  */
 
 import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Create a QueryClient instance with custom configuration
 export const queryClient = new QueryClient({
@@ -13,8 +16,8 @@ export const queryClient = new QueryClient({
       // Stale time: Data is considered fresh for 5 minutes
       staleTime: 5 * 60 * 1000,
 
-      // Cache time: Unused data is garbage collected after 10 minutes
-      gcTime: 10 * 60 * 1000,
+      // Cache time: Unused data is garbage collected after 30 minutes (for offline support)
+      gcTime: 30 * 60 * 1000,
 
       // Retry failed requests 3 times with exponential backoff
       retry: 3,
@@ -41,6 +44,64 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Create AsyncStorage persister for offline caching
+export const asyncStoragePersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  // Serialize/deserialize to handle Firestore Timestamps
+  serialize: (data) => {
+    try {
+      return JSON.stringify(data, (key, value) => {
+        // Handle Firestore Timestamps
+        if (value && typeof value === 'object' && value.toMillis) {
+          return {
+            _type: 'Timestamp',
+            seconds: Math.floor(value.toMillis() / 1000),
+            nanoseconds: (value.toMillis() % 1000) * 1000000,
+          };
+        }
+        return value;
+      });
+    } catch (error) {
+      console.error('Error serializing cache data:', error);
+      return JSON.stringify({}); // Fallback to empty object
+    }
+  },
+  deserialize: (cachedString) => {
+    try {
+      return JSON.parse(cachedString, (key, value) => {
+        // Restore Firestore Timestamps
+        if (value && value._type === 'Timestamp') {
+          // Return as plain object with toMillis method
+          const millis = value.seconds * 1000 + Math.floor(value.nanoseconds / 1000000);
+          return {
+            seconds: value.seconds,
+            nanoseconds: value.nanoseconds,
+            toMillis: () => millis,
+            toDate: () => new Date(millis),
+          };
+        }
+        return value;
+      });
+    } catch (error) {
+      console.error('Error deserializing cache data:', error);
+      return {}; // Fallback to empty object
+    }
+  },
+  throttleTime: 1000, // Throttle writes to storage
+});
+
+// Persistence options
+export const persistOptions = {
+  persister: asyncStoragePersister,
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours - cache expires after this time
+  dehydrateOptions: {
+    // Don't persist queries that failed
+    shouldDehydrateQuery: (query: any) => {
+      return query.state.status === 'success';
+    },
+  },
+};
 
 // Query keys factory for consistent key management
 export const queryKeys = {

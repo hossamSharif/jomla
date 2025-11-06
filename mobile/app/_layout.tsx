@@ -6,8 +6,8 @@
 
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from '../src/services/query-client';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { queryClient, persistOptions } from '../src/services/query-client';
 import { useAuthStore } from '../src/store';
 import { setupAuthListener } from '../src/services/auth';
 import { initializeSessionMonitoring } from '../src/services/sessionService';
@@ -92,12 +92,15 @@ export default function RootLayout() {
   }, [isAuthenticated, isLoading, segments, user?.isPhoneVerified]);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={persistOptions}
+    >
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="orders" options={{ headerShown: false }} />
       </Stack>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }
