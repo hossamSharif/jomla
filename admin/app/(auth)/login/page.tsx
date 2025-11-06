@@ -39,10 +39,34 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await signIn(data.email, data.password);
+      console.log('Attempting to sign in with:', data.email);
+      const user = await signIn(data.email, data.password);
+      console.log('Sign in successful, user:', user.uid);
+
+      // Get the ID token and set it as a cookie via API
+      const idToken = await user.getIdToken();
+      console.log('Got ID token, calling login API...');
+
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Login API error:', errorData);
+        throw new Error(errorData.error || 'Failed to set authentication cookie');
+      }
+
+      console.log('Login successful, redirecting to dashboard...');
       // Redirect to dashboard on successful login
       router.push('/offers');
+      router.refresh(); // Refresh to update middleware state
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.message || 'Failed to sign in. Please try again.');
     } finally {
       setIsLoading(false);

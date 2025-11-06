@@ -297,11 +297,11 @@ This project uses a monorepo structure:
 
 **Purpose**: Background functions to maintain cart integrity when offers change
 
-- [ ] T148 [P] Implement invalidateCartsOnOfferChange Cloud Function in functions/src/cart/invalidateCartsOnOfferChange.ts
-- [ ] T149 Implement batch cart update logic when offer is modified or deleted
-- [ ] T150 Add logging for cart invalidation events in Cloud Functions
+- [X] T148 [P] Implement invalidateCartsOnOfferChange Cloud Function in functions/src/cart/invalidateCartsOnOfferChange.ts
+- [X] T149 Implement batch cart update logic when offer is modified or deleted
+- [X] T150 Add logging for cart invalidation events in Cloud Functions
 
-**Checkpoint**: Carts are automatically flagged when offers change, protecting users from invalid checkouts
+**Checkpoint**: Carts are automatically flagged when offers change, protecting users from invalid checkouts ✅ COMPLETE
 
 ---
 

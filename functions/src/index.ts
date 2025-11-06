@@ -16,6 +16,7 @@ export * from './auth/resetPassword';
 
 // Cart Functions
 export * from './cart/validateCart';
+export * from './cart/invalidateCartsOnOfferChange';
 
 // Order Functions
 export * from './orders/createOrder';
