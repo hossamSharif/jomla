@@ -81,22 +81,22 @@ This project uses a monorepo structure:
 
 ### Implementation for User Story 1
 
-- [ ] T032 [P] [US1] Implement sendVerificationCode Cloud Function in functions/src/auth/sendVerificationCode.ts
-- [ ] T033 [P] [US1] Implement verifyCode Cloud Function in functions/src/auth/verifyCode.ts
-- [ ] T034 [P] [US1] Implement resetPassword Cloud Function in functions/src/auth/resetPassword.ts
-- [ ] T035 [P] [US1] Create User Firestore service in mobile/src/services/userService.ts for user CRUD operations
-- [ ] T036 [US1] Create registration screen at mobile/app/(auth)/register.tsx with form validation (8+ char password, email, phone)
-- [ ] T037 [US1] Create phone verification screen at mobile/app/(auth)/verify-phone.tsx with 6-digit code input and resend logic (max 3 attempts/hour)
-- [ ] T038 [US1] Create login screen at mobile/app/(auth)/login.tsx with email/password form
-- [ ] T039 [US1] Create forgot password screen at mobile/app/(auth)/forgot-password.tsx with phone verification flow
-- [ ] T040 [US1] Implement session management with 30-day sliding expiration in mobile/src/services/sessionService.ts
-- [ ] T041 [US1] Add authentication state management to Zustand store in mobile/src/store/authStore.ts
-- [ ] T042 [US1] Implement auth redirect logic in mobile/app/_layout.tsx to protect authenticated routes
-- [ ] T043 [US1] Create password reset confirmation screen at mobile/app/(auth)/reset-password.tsx
-- [ ] T044 [US1] Add error handling for verification failures (expired codes, rate limits) in mobile/src/services/auth.ts
-- [ ] T045 [US1] Implement FCM token registration on login in mobile/src/services/notificationService.ts
+- [X] T032 [P] [US1] Implement sendVerificationCode Cloud Function in functions/src/auth/sendVerificationCode.ts
+- [X] T033 [P] [US1] Implement verifyCode Cloud Function in functions/src/auth/verifyCode.ts
+- [X] T034 [P] [US1] Implement resetPassword Cloud Function in functions/src/auth/resetPassword.ts
+- [X] T035 [P] [US1] Create User Firestore service in mobile/src/services/userService.ts for user CRUD operations
+- [X] T036 [US1] Create registration screen at mobile/app/(auth)/register.tsx with form validation (8+ char password, email, phone)
+- [X] T037 [US1] Create phone verification screen at mobile/app/(auth)/verify-phone.tsx with 6-digit code input and resend logic (max 3 attempts/hour)
+- [X] T038 [US1] Create login screen at mobile/app/(auth)/login.tsx with email/password form
+- [X] T039 [US1] Create forgot password screen at mobile/app/(auth)/forgot-password.tsx with phone verification flow
+- [X] T040 [US1] Implement session management with 30-day sliding expiration in mobile/src/services/sessionService.ts
+- [X] T041 [US1] Add authentication state management to Zustand store in mobile/src/store/index.ts
+- [X] T042 [US1] Implement auth redirect logic in mobile/app/_layout.tsx to protect authenticated routes
+- [X] T043 [US1] Create password reset confirmation screen at mobile/app/(auth)/reset-password.tsx
+- [X] T044 [US1] Add error handling for verification failures (expired codes, rate limits) in mobile/src/utils/authErrors.ts
+- [X] T045 [US1] Implement FCM token registration on login in mobile/src/services/notificationService.ts
 
-**Checkpoint**: User registration, SMS verification, login, and password reset should be fully functional
+**Checkpoint**: User registration, SMS verification, login, and password reset should be fully functional ✅ COMPLETE
 
 ---
 

@@ -9,11 +9,10 @@
  * - cart: Cart validation logic
  */
 
-// Export functions here as they are implemented
-// Example:
-// export * from './auth/sendVerificationCode';
-// export * from './auth/verifyCode';
-// export * from './orders/createOrder';
+// Authentication Functions
+export * from './auth/sendVerificationCode';
+export * from './auth/verifyCode';
+export * from './auth/resetPassword';
 
 // Placeholder function for initial deployment
 import * as functions from 'firebase-functions';
