@@ -3,9 +3,10 @@
  *
  * Displays a bundled offer with pricing, savings, and product breakdown.
  * Shows original total, discounted total, and savings percentage.
+ * Includes "Add to Cart" functionality with quantity controls.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,26 +14,92 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { Offer } from '../../../shared/types/offer';
 import { formatOfferPrice, isOfferValid } from '../services/offerService';
 import { router } from 'expo-router';
+import { useCartStore } from '../store';
+import { CartOfferItem } from '../../../shared/types/cart';
+import { canAddToCart } from '../utils/cartValidation';
 
 interface OfferCardProps {
   offer: Offer;
   onPress?: (offer: Offer) => void;
+  showAddToCart?: boolean;
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_WIDTH = SCREEN_WIDTH - 32; // 16px margin on each side
 
-export function OfferCard({ offer, onPress }: OfferCardProps) {
+export function OfferCard({ offer, onPress, showAddToCart = true }: OfferCardProps) {
+  const [quantity, setQuantity] = useState(offer.minQuantity || 1);
+  const { cart, addOfferItem } = useCartStore();
+
   const handlePress = () => {
     if (onPress) {
       onPress(offer);
     } else {
       // Navigate to offer details screen
       router.push(`/offers/${offer.id}`);
+    }
+  };
+
+  const handleAddToCart = (e: any) => {
+    // Prevent navigation when clicking add to cart
+    e.stopPropagation();
+
+    // Validate quantity
+    const validation = canAddToCart(
+      offer.id,
+      quantity,
+      cart,
+      offer.maxQuantity,
+      offer.minQuantity
+    );
+
+    if (!validation.canAdd) {
+      Alert.alert('Cannot Add to Cart', validation.reason || 'Invalid quantity');
+      return;
+    }
+
+    // Create cart offer item
+    const cartItem: CartOfferItem = {
+      offerId: offer.id,
+      offerName: offer.name,
+      quantity,
+      discountedTotal: offer.discountedTotal * quantity,
+      originalTotal: offer.originalTotal * quantity,
+      products: offer.products,
+      version: offer.updatedAt ? offer.updatedAt.toMillis() : Date.now(),
+    };
+
+    addOfferItem(cartItem);
+
+    Alert.alert(
+      'Added to Cart',
+      `${offer.name} (x${quantity}) has been added to your cart.`,
+      [
+        { text: 'Continue Shopping', style: 'cancel' },
+        { text: 'View Cart', onPress: () => router.push('/cart') },
+      ]
+    );
+
+    // Reset quantity to minimum
+    setQuantity(offer.minQuantity || 1);
+  };
+
+  const handleIncreaseQuantity = (e: any) => {
+    e.stopPropagation();
+    if (quantity < offer.maxQuantity) {
+      setQuantity(quantity + 1);
+    }
+  };
+
+  const handleDecreaseQuantity = (e: any) => {
+    e.stopPropagation();
+    if (quantity > offer.minQuantity) {
+      setQuantity(quantity - 1);
     }
   };
 
@@ -105,6 +172,41 @@ export function OfferCard({ offer, onPress }: OfferCardProps) {
             <Text style={styles.limitText}>Max: {offer.maxQuantity}</Text>
           )}
         </View>
+
+        {/* Add to Cart Section */}
+        {showAddToCart && isValid && (
+          <View style={styles.addToCartSection}>
+            {/* Quantity Controls */}
+            <View style={styles.quantityControl}>
+              <TouchableOpacity
+                style={[styles.quantityButton, quantity <= offer.minQuantity && styles.quantityButtonDisabled]}
+                onPress={handleDecreaseQuantity}
+                disabled={quantity <= offer.minQuantity}
+              >
+                <Text style={styles.quantityButtonText}>-</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.quantityText}>{quantity}</Text>
+
+              <TouchableOpacity
+                style={[styles.quantityButton, quantity >= offer.maxQuantity && styles.quantityButtonDisabled]}
+                onPress={handleIncreaseQuantity}
+                disabled={quantity >= offer.maxQuantity}
+              >
+                <Text style={styles.quantityButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Add to Cart Button */}
+            <TouchableOpacity
+              style={styles.addToCartButton}
+              onPress={handleAddToCart}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.addToCartButtonText}>Add to Cart</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Inactive Status */}
         {!isValid && (
@@ -216,6 +318,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   inactiveText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  addToCartSection: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  quantityControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  quantityButton: {
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+  },
+  quantityButtonDisabled: {
+    opacity: 0.3,
+  },
+  quantityButtonText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  quantityText: {
+    fontSize: 16,
+    fontWeight: '600',
+    paddingHorizontal: 16,
+    minWidth: 40,
+    textAlign: 'center',
+  },
+  addToCartButton: {
+    flex: 1,
+    backgroundColor: '#2ECC71',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addToCartButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',

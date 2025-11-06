@@ -14,6 +14,9 @@ export * from './auth/sendVerificationCode';
 export * from './auth/verifyCode';
 export * from './auth/resetPassword';
 
+// Cart Functions
+export * from './cart/validateCart';
+
 // Placeholder function for initial deployment
 import * as functions from 'firebase-functions';
 

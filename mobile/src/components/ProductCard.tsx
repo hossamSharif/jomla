@@ -3,9 +3,10 @@
  *
  * Displays an individual product with image, name, price, and availability.
  * Shows quantity limits and stock status.
+ * Includes "Add to Cart" functionality with quantity controls.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,20 +14,28 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { Product } from '../../../shared/types/product';
 import { formatProductPrice, isProductAvailable } from '../services/productService';
 import { router } from 'expo-router';
+import { useCartStore } from '../store';
+import { CartProductItem } from '../../../shared/types/cart';
+import { canAddToCart } from '../utils/cartValidation';
 
 interface ProductCardProps {
   product: Product;
   onPress?: (product: Product) => void;
+  showAddToCart?: boolean;
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2; // 2 columns with 16px outer margins and 16px gap
 
-export function ProductCard({ product, onPress }: ProductCardProps) {
+export function ProductCard({ product, onPress, showAddToCart = true }: ProductCardProps) {
+  const [quantity, setQuantity] = useState(product.minQuantity || 1);
+  const { cart, addProductItem } = useCartStore();
+
   const handlePress = () => {
     if (onPress) {
       onPress(product);
@@ -34,6 +43,63 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
       // Navigate to product details screen if implemented
       // For now, just log
       console.log('Product pressed:', product.id);
+    }
+  };
+
+  const handleAddToCart = (e: any) => {
+    // Prevent navigation when clicking add to cart
+    e.stopPropagation();
+
+    // Validate quantity
+    const validation = canAddToCart(
+      product.id,
+      quantity,
+      cart,
+      product.maxQuantity,
+      product.minQuantity
+    );
+
+    if (!validation.canAdd) {
+      Alert.alert('Cannot Add to Cart', validation.reason || 'Invalid quantity');
+      return;
+    }
+
+    // Create cart product item
+    const cartItem: CartProductItem = {
+      productId: product.id,
+      productName: product.name,
+      quantity,
+      pricePerUnit: product.basePrice,
+      totalPrice: product.basePrice * quantity,
+      imageUrl: product.thumbnailUrl || product.imageUrl,
+    };
+
+    addProductItem(cartItem);
+
+    Alert.alert(
+      'Added to Cart',
+      `${product.name} (x${quantity}) has been added to your cart.`,
+      [
+        { text: 'Continue Shopping', style: 'cancel' },
+        { text: 'View Cart', onPress: () => router.push('/cart') },
+      ]
+    );
+
+    // Reset quantity to minimum
+    setQuantity(product.minQuantity || 1);
+  };
+
+  const handleIncreaseQuantity = (e: any) => {
+    e.stopPropagation();
+    if (quantity < product.maxQuantity) {
+      setQuantity(quantity + 1);
+    }
+  };
+
+  const handleDecreaseQuantity = (e: any) => {
+    e.stopPropagation();
+    if (quantity > product.minQuantity) {
+      setQuantity(quantity - 1);
     }
   };
 
@@ -93,6 +159,41 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
             {product.maxQuantity < 999 && (
               <Text style={styles.limitText}>Max: {product.maxQuantity}</Text>
             )}
+          </View>
+        )}
+
+        {/* Add to Cart Section */}
+        {showAddToCart && isAvailable && (
+          <View style={styles.addToCartSection}>
+            {/* Quantity Controls */}
+            <View style={styles.quantityControl}>
+              <TouchableOpacity
+                style={[styles.quantityButton, quantity <= product.minQuantity && styles.quantityButtonDisabled]}
+                onPress={handleDecreaseQuantity}
+                disabled={quantity <= product.minQuantity}
+              >
+                <Text style={styles.quantityButtonText}>-</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.quantityText}>{quantity}</Text>
+
+              <TouchableOpacity
+                style={[styles.quantityButton, quantity >= product.maxQuantity && styles.quantityButtonDisabled]}
+                onPress={handleIncreaseQuantity}
+                disabled={quantity >= product.maxQuantity}
+              >
+                <Text style={styles.quantityButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Add to Cart Button */}
+            <TouchableOpacity
+              style={styles.addToCartButton}
+              onPress={handleAddToCart}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.addToCartButtonText}>+</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -180,5 +281,55 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#888888',
     fontStyle: 'italic',
+  },
+  addToCartSection: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  quantityControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  quantityButton: {
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+  },
+  quantityButtonDisabled: {
+    opacity: 0.3,
+  },
+  quantityButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  quantityText: {
+    fontSize: 14,
+    fontWeight: '600',
+    paddingHorizontal: 10,
+    minWidth: 30,
+    textAlign: 'center',
+  },
+  addToCartButton: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#2ECC71',
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addToCartButtonText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 24,
   },
 });
