@@ -9,79 +9,185 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.admin == true;
+      return request.auth.token.admin == true;
     }
 
     function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+      return request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidPhoneNumber(phone) {
+      return phone.matches('^\\+[1-9]\\d{1,14}$');  // E.164 format
     }
 
     // Users Collection
     match /users/{userId} {
       // Users can read their own profile
-      allow read: if isOwner(userId);
+      allow read: if isAuthenticated() && isOwner(userId);
 
-      // Users can update their own profile (limited fields)
-      allow update: if isOwner(userId)
-        && request.resource.data.keys().hasOnly([
-          'firstName', 'lastName', 'fcmTokens', 'lastLoginAt',
-          'sessionExpiresAt', 'updatedAt'
-        ]);
+      // Users can create their own profile during registration
+      allow create: if isAuthenticated()
+        && isOwner(userId)
+        && request.resource.data.email is string
+        && isValidEmail(request.resource.data.email)
+        && request.resource.data.phoneNumber is string
+        && isValidPhoneNumber(request.resource.data.phoneNumber)
+        && request.resource.data.firstName is string
+        && request.resource.data.lastName is string
+        && request.resource.data.isPhoneVerified == false;  // Must verify
 
-      // Only Cloud Functions can create users (via Firebase Auth trigger)
-      allow create: if false;
-      allow delete: if false;
+      // Users can update limited fields in their own profile
+      allow update: if isAuthenticated()
+        && isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            'firstName',
+            'lastName',
+            'fcmTokens',
+            'lastLoginAt',
+            'sessionExpiresAt',
+            'updatedAt'
+          ]);
+
+      // Users cannot delete their own profile (admin only)
+      allow delete: if isAdmin();
     }
 
     // Products Collection
     match /products/{productId} {
       // Any authenticated user can read active products
-      allow read: if isAuthenticated() && resource.data.status == 'active';
+      allow read: if isAuthenticated()
+        && resource.data.status == 'active';
 
-      // Only admins can write
-      allow create, update, delete: if isAdmin();
+      // Only admins can read inactive products
+      allow read: if isAdmin();
+
+      // Only admins can create products
+      allow create: if isAdmin()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.basePrice is int
+        && request.resource.data.basePrice > 0
+        && request.resource.data.minQuantity is int
+        && request.resource.data.minQuantity >= 1
+        && request.resource.data.maxQuantity is int
+        && request.resource.data.maxQuantity >= request.resource.data.minQuantity
+        && request.resource.data.status in ['active', 'inactive'];
+
+      // Only admins can update products
+      allow update: if isAdmin();
+
+      // Only admins can delete products
+      allow delete: if isAdmin();
     }
 
     // Offers Collection
     match /offers/{offerId} {
-      // Any authenticated user can read active offers within validity period
+      // Any authenticated user can read active, valid offers
       allow read: if isAuthenticated()
         && resource.data.status == 'active'
         && (resource.data.validFrom == null || resource.data.validFrom <= request.time)
         && (resource.data.validUntil == null || resource.data.validUntil >= request.time);
 
-      // Only admins can write
-      allow create, update, delete: if isAdmin();
+      // Admins can read all offers (including drafts and inactive)
+      allow read: if isAdmin();
+
+      // Only admins can create offers
+      allow create: if isAdmin()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.products is list
+        && request.resource.data.products.size() > 0
+        && request.resource.data.originalTotal is int
+        && request.resource.data.discountedTotal is int
+        && request.resource.data.discountedTotal < request.resource.data.originalTotal
+        && request.resource.data.status in ['draft', 'active', 'inactive'];
+
+      // Only admins can update offers
+      allow update: if isAdmin();
+
+      // Only admins can delete offers
+      allow delete: if isAdmin();
     }
 
     // Carts Collection
     match /carts/{userId} {
       // Users can only access their own cart
-      allow read, write: if isOwner(userId);
+      allow read: if isAuthenticated() && isOwner(userId);
+
+      // Users can create their own cart
+      allow create: if isAuthenticated()
+        && isOwner(userId)
+        && request.resource.data.userId == userId;
+
+      // Users can update their own cart
+      allow update: if isAuthenticated()
+        && isOwner(userId)
+        && request.resource.data.userId == userId;
+
+      // Users can delete their own cart
+      allow delete: if isAuthenticated() && isOwner(userId);
     }
 
     // Orders Collection
     match /orders/{orderId} {
       // Users can read their own orders
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated()
+        && isOwner(resource.data.userId);
 
-      // Users can create orders (validated by Cloud Function)
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Admins can read all orders
+      allow read: if isAdmin();
 
-      // Only admins can update orders
+      // Users can create orders (validation happens in Cloud Function)
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.fulfillmentMethod in ['delivery', 'pickup']
+        && (
+          (request.resource.data.fulfillmentMethod == 'delivery'
+            && request.resource.data.deliveryDetails is map
+            && request.resource.data.deliveryDetails.address is string
+            && request.resource.data.deliveryDetails.city is string
+            && request.resource.data.deliveryDetails.postalCode is string)
+          ||
+          (request.resource.data.fulfillmentMethod == 'pickup'
+            && request.resource.data.pickupDetails is map
+            && request.resource.data.pickupDetails.pickupTime is timestamp)
+        );
+
+      // Users can update their own pending orders (cancel only)
+      allow update: if isAuthenticated()
+        && isOwner(resource.data.userId)
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'cancelled';
+
+      // Only admins can update order status
       allow update: if isAdmin();
 
-      // No one can delete orders
-      allow delete: if false;
+      // Only admins can delete orders
+      allow delete: if isAdmin();
     }
 
     // Admin Users Collection
     match /adminUsers/{adminId} {
-      // Only authenticated admins can read
+      // Only authenticated admins can read admin user data
       allow read: if isAdmin();
 
-      // Only super admins can create/update admins
-      allow write: if isAdmin()
+      // Only super admins can create admin users
+      allow create: if isAdmin()
+        && get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)).data.role == 'super_admin'
+        && request.resource.data.role in ['super_admin', 'admin', 'viewer'];
+
+      // Only super admins can update admin users
+      allow update: if isAdmin()
+        && get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)).data.role == 'super_admin';
+
+      // Only super admins can delete admin users
+      allow delete: if isAdmin()
         && get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)).data.role == 'super_admin';
     }
 
@@ -89,10 +195,22 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       // Users can read their own notifications
       allow read: if isAuthenticated()
-        && (resource.data.targetUserId == request.auth.uid || resource.data.targetType == 'all');
+        && (resource.data.targetType == 'all'
+          || (resource.data.targetType == 'user' && resource.data.targetUserId == request.auth.uid));
 
-      // Only Cloud Functions can write notifications
-      allow write: if false;
+      // Admins can read all notifications
+      allow read: if isAdmin();
+
+      // Only Cloud Functions and admins can create notifications
+      allow create: if isAdmin();
+
+      // Only admins can update/delete notifications
+      allow update, delete: if isAdmin();
+    }
+
+    // Deny All Other Collections
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
