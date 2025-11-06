@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase-client';
-import { Offer } from '@/../../shared/types/offer';
+import { Offer } from '@shared/types/offer';
 import OfferForm from '@/components/dashboard/OfferForm';
 
 export default function EditOfferPage() {

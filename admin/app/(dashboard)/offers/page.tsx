@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase-client';
-import { Offer } from '@/../../shared/types/offer';
+import { Offer } from '@shared/types/offer';
 
 export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);

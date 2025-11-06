@@ -28,7 +28,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase-client';
 import { getCurrentUser } from '@/lib/auth';
-import { Product } from '@/../../shared/types/product';
+import { Product } from '@shared/types/product';
 
 // Form validation schema
 const productSchema = z.object({
@@ -401,11 +401,15 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
             {/* Upload Button */}
             <div className="flex-1">
               <input
-                ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                {...register('imageFile')}
-                onChange={handleImageSelect}
+                {...register('imageFile', {
+                  onChange: handleImageSelect
+                })}
+                ref={(e) => {
+                  register('imageFile').ref(e);
+                  fileInputRef.current = e;
+                }}
                 className="hidden"
               />
               <button

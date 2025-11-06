@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, query, orderBy, onSnapshot, Timestamp, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase-client';
-import { Product } from '@/../../shared/types/product';
+import { Product } from '@shared/types/product';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);

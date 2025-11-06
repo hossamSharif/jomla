@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase-client';
-import { Product } from '@/../../shared/types/product';
+import { Product } from '@shared/types/product';
 import ProductForm from '@/components/dashboard/ProductForm';
 
 export default function EditProductPage() {

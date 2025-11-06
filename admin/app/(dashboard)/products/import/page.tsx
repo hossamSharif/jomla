@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import { collection, addDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase-client';
 import { getCurrentUser } from '@/lib/auth';
-import { Product } from '@/../../shared/types/product';
+import { Product } from '@shared/types/product';
 
 interface ParsedProduct {
   name: string;

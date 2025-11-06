@@ -31,8 +31,8 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase-client';
 import { getCurrentUser } from '@/lib/auth';
-import { Product } from '@/../../shared/types/product';
-import { Offer, OfferProduct } from '@/../../shared/types/offer';
+import { Product } from '@shared/types/product';
+import { Offer, OfferProduct } from '@shared/types/offer';
 
 // Form validation schema
 const offerSchema = z.object({

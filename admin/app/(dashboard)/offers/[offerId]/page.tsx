@@ -14,7 +14,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { doc, getDoc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase-client';
-import { Offer } from '@/../../shared/types/offer';
+import { Offer } from '@shared/types/offer';
 
 export default function OfferDetailsPage() {
   const router = useRouter();
