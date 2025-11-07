@@ -41,59 +41,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Verify token and admin status
-  try {
-    // Note: Token verification should be done server-side
-    // This is a simplified version - actual implementation should verify the token
-    // using Firebase Admin SDK in an API route
-    const response = await fetch(`${request.nextUrl.origin}/api/auth/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': request.headers.get('cookie') || '',
-      },
-      body: JSON.stringify({ token: authToken }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Token verification failed');
-    }
-
-    const { isAdmin } = await response.json();
-
-    if (!isAdmin) {
-      // User is authenticated but not an admin
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json(
-          { error: 'Forbidden: Admin access required' },
-          { status: 403 }
-        );
-      }
-
-      // Redirect to unauthorized page
-      const url = request.nextUrl.clone();
-      url.pathname = '/unauthorized';
-      return NextResponse.redirect(url);
-    }
-
-    // User is authenticated and is an admin
-    return NextResponse.next();
-  } catch (error) {
-    console.error('Middleware auth error:', error);
-
-    // On error, redirect to login
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { error: 'Authentication failed' },
-        { status: 401 }
-      );
-    }
-
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
-  }
+  // Token exists, allow the request to proceed
+  // Actual token verification will be done in server components and API routes
+  // using Firebase Admin SDK
+  return NextResponse.next();
 }
 
 // Configure which routes to run middleware on

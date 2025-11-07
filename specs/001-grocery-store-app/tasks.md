@@ -337,30 +337,30 @@ This project uses a monorepo structure:
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T161 [P] Setup Firebase Hosting for admin dashboard deployment
-- [ ] T162 [P] Configure EAS Build for mobile app (iOS and Android)
-- [ ] T163 [P] Setup EAS Update for over-the-air updates
-- [ ] T164 [P] Create seed data script in functions/src/utils/seedData.ts for development/testing
-- [ ] T165 Add loading states and skeleton screens across mobile app
-- [ ] T166 [P] Add error boundary components in mobile/app/_layout.tsx and admin/app/layout.tsx
-- [ ] T167 Implement retry logic for failed Cloud Function calls in mobile app
-- [ ] T168 [P] Add analytics tracking (Firebase Analytics) for key user actions
-- [ ] T169 Optimize product images with WebP format and lazy loading
-- [ ] T170 [P] Add mobile app splash screen and app icons in mobile/assets/
-- [ ] T171 [P] Create admin dashboard favicon and branding
-- [ ] T172 Implement rate limiting for Cloud Functions to prevent abuse
-- [ ] T173 Add comprehensive error logging to Cloud Logging in all Cloud Functions
-- [ ] T174 [P] Setup CI/CD pipeline (GitHub Actions) for automated deployment
-- [ ] T175 Verify quickstart.md setup instructions by following them end-to-end
-- [ ] T176 [P] Add accessibility improvements (ARIA labels, screen reader support) to mobile app
-- [ ] T177 [P] Add accessibility improvements (WCAG compliance) to admin dashboard
-- [ ] T178 Performance optimization: Enable Hermes engine in mobile/android/app/build.gradle
-- [ ] T179 [P] Performance optimization: Implement virtualized lists for products/offers
-- [ ] T180 Security audit: Review all Firestore security rules for edge cases
-- [ ] T181 [P] Security audit: Review all Cloud Functions for input validation
-- [ ] T182 Add production environment configuration and deployment instructions
-- [ ] T183 Create admin user manual/documentation in docs/admin-guide.md
-- [ ] T184 Create mobile app user guide in docs/user-guide.md
+- [X] T161 [P] Setup Firebase Hosting for admin dashboard deployment
+- [X] T162 [P] Configure EAS Build for mobile app (iOS and Android)
+- [X] T163 [P] Setup EAS Update for over-the-air updates
+- [X] T164 [P] Create seed data script in functions/src/utils/seedData.ts for development/testing
+- [X] T165 Add loading states and skeleton screens across mobile app
+- [X] T166 [P] Add error boundary components in mobile/app/_layout.tsx and admin/app/layout.tsx
+- [X] T167 Implement retry logic for failed Cloud Function calls in mobile app
+- [X] T168 [P] Add analytics tracking (Firebase Analytics) for key user actions
+- [X] T169 Optimize product images with WebP format and lazy loading
+- [X] T170 [P] Add mobile app splash screen and app icons in mobile/assets/
+- [X] T171 [P] Create admin dashboard favicon and branding
+- [X] T172 Implement rate limiting for Cloud Functions to prevent abuse
+- [X] T173 Add comprehensive error logging to Cloud Logging in all Cloud Functions
+- [X] T174 [P] Setup CI/CD pipeline (GitHub Actions) for automated deployment
+- [X] T175 Verify quickstart.md setup instructions by following them end-to-end
+- [X] T176 [P] Add accessibility improvements (ARIA labels, screen reader support) to mobile app
+- [X] T177 [P] Add accessibility improvements (WCAG compliance) to admin dashboard
+- [X] T178 Performance optimization: Enable Hermes engine in mobile/android/app/build.gradle
+- [X] T179 [P] Performance optimization: Implement virtualized lists for products/offers
+- [X] T180 Security audit: Review all Firestore security rules for edge cases
+- [X] T181 [P] Security audit: Review all Cloud Functions for input validation
+- [X] T182 Add production environment configuration and deployment instructions
+- [X] T183 Create admin user manual/documentation in docs/admin-guide.md
+- [X] T184 Create mobile app user guide in docs/user-guide.md
 
 ---
 

@@ -43,10 +43,19 @@ export default function LoginPage() {
       const user = await signIn(data.email, data.password);
       console.log('Sign in successful, user:', user.uid);
 
-      // Get the ID token and set it as a cookie via API
-      const idToken = await user.getIdToken();
-      console.log('Got ID token, calling login API...');
+      // Force token refresh to get the latest custom claims
+      console.log('Refreshing token to get admin claims...');
+      const idToken = await user.getIdToken(true); // Force refresh
 
+      // Verify we have admin claims
+      const tokenResult = await user.getIdTokenResult();
+      console.log('Token claims:', tokenResult.claims);
+
+      if (!tokenResult.claims.admin) {
+        throw new Error('Admin privileges not found. Please contact support.');
+      }
+
+      console.log('Got ID token with admin claims, calling login API...');
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {

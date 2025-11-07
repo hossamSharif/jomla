@@ -9,22 +9,54 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase-client';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '@/lib/firebase-client';
 import { Offer } from '@shared/types/offer';
 
 export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'draft'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Wait for auth state to be ready and ensure token has admin claims
   useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed:', user?.uid || 'Not authenticated');
+
+      if (user) {
+        // Get fresh token with claims
+        try {
+          const tokenResult = await user.getIdTokenResult(true); // Force refresh
+          console.log('Token claims:', tokenResult.claims);
+          console.log('Has admin claim:', tokenResult.claims.admin);
+        } catch (error) {
+          console.error('Error getting token:', error);
+        }
+      }
+
+      setAuthChecked(true);
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  useEffect(() => {
+    // Only subscribe to offers once auth is checked
+    if (!authChecked) {
+      console.log('Waiting for auth state...');
+      return;
+    }
+
+    console.log('Subscribing to offers collection...');
     // Subscribe to offers collection
     const q = query(collection(db, 'offers'), orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        console.log('Received offers snapshot:', snapshot.size);
         const offersData: Offer[] = [];
         snapshot.forEach((doc) => {
           offersData.push({ id: doc.id, ...doc.data() } as Offer);
@@ -39,7 +71,7 @@ export default function OffersPage() {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [authChecked]);
 
   // Filter offers based on status and search term
   const filteredOffers = offers.filter((offer) => {
